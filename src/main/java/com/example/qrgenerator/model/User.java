@@ -29,10 +29,18 @@ public class User {
 
     @NotBlank(message = "Mobile number is mandatory")
     @Pattern(regexp = "^\\d{10}$", message = "Invalid mobile number")
+    
+
+    @Column( nullable = false, unique = true)
+    @NotNull
     private String mobileNumber;
 
     @NotBlank(message = "Email is mandatory")
+    
     @Email(message = "Invalid email format")
+
+    @Column( nullable = false, unique = true)
+    @NotNull
     private String email;
 
     @NotBlank(message = "College name is mandatory")

@@ -1,0 +1,24 @@
+# Conversion to YAML from Properties formar report
+# Warnings:
+# - The yaml file had comments which are lost in the refactoring!
+spring:
+  application:
+    name: QR
+  datasource:
+    url: jdbc:mysql://localhost:3306/qrcode
+    username: root
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+    mode: HTML
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true

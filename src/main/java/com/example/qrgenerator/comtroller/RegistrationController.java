@@ -1,10 +1,14 @@
 package com.example.qrgenerator.comtroller;
 
 import java.awt.image.BufferedImage;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -51,17 +55,63 @@ public class RegistrationController {
         return "registration";
     }
 
+
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("user") User user, 
                              BindingResult result, Model model) {
         if (result.hasErrors()) {
             return "registration";
         }
-        userRepository.save(user);
+
+        List<String> errors = new ArrayList<>();
+
+        // Check for existing email
+        if (userRepository.existsByEmail(user.getEmail())) {
+            errors.add("Email is already registered!");
+        }
+
+        // Check for existing mobile
+        if (userRepository.existsByMobileNumber(user.getMobileNumber())) {
+            errors.add("Mobile number is already registered!");
+        }
+
+        // Return if any errors
+        if (!errors.isEmpty()) {
+            model.addAttribute("errors", errors);
+            return "registration";
+        }
+
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            handleDuplicateEntry(ex, model);
+            return "registration";
+        }
+
         model.addAttribute("success", "Registration Successful!");
         model.addAttribute("adminLink", "/admin");
         return "success";
     }
+
+    private void handleDuplicateEntry(DataIntegrityViolationException ex, Model model) {
+        Throwable rootCause = ex.getRootCause();
+        if (rootCause instanceof SQLIntegrityConstraintViolationException) {
+            SQLIntegrityConstraintViolationException sqlEx = 
+                (SQLIntegrityConstraintViolationException) rootCause;
+            String errorMessage = sqlEx.getMessage();
+            
+            List<String> errors = new ArrayList<>();
+            if (errorMessage.contains("email")) {
+                errors.add("Email is already registered!");
+            }
+            if (errorMessage.contains("mobile_number")) {
+                errors.add("Mobile number is already registered!");
+            }
+            
+            model.addAttribute("errors", errors);
+        }
+    }
+
 
     @GetMapping("/admin")
     public String adminPanel(Model model) {
